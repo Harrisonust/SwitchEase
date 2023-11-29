@@ -16,7 +16,7 @@
 
 // user includes
 #include "blink.h"
-#include "ble.h"
+#include "ble_server.h"
 #include "servo.h"
 
 TaskHandle_t blinkTaskHandle = NULL;
