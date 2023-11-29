@@ -16,14 +16,17 @@
 
 // user includes
 #include "blink.h"
-#include "wifi.h"
+#include "ble.h"
+#include "servo.h"
 
 TaskHandle_t blinkTaskHandle = NULL;
-TaskHandle_t wifiTaskHandle = NULL;
+TaskHandle_t bleTaskHandle = NULL;
+TaskHandle_t servoTaskHandle = NULL;
 
 void app_main(void) {
     /* Configure the peripheral according to the LED type */
 
     xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 0);
-    xTaskCreatePinnedToCore(wifi_task, "WIFI Task", 2800, NULL, 3, &wifiTaskHandle, 1);
+    xTaskCreatePinnedToCore(ble_task, "Bluetooth Task", 2800, NULL, 3, &bleTaskHandle, 1);
+    xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
 }

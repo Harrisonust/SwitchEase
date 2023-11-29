@@ -1,2 +1,2 @@
-idf_component_register(SRCS "main.c" "blink/blink.c" "wifi/wifi.c"
-                       INCLUDE_DIRS "." "./wifi" "./blink")
+idf_component_register(SRCS "main.c" "blink/blink.c" "ble/ble.c" "servo/servo.c"
+                       INCLUDE_DIRS "." "./ble" "./blink" "./servo")

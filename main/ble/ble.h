@@ -4,4 +4,4 @@
 #include "sdkconfig.h"
 #include "esp_log.h"
 
-void wifi_task(void *par);
+void ble_task(void *par);
