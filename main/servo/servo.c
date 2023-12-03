@@ -32,7 +32,7 @@ void servo_task(void *par) {
 
     mcpwm_gen_handle_t generator = NULL;
     mcpwm_generator_config_t generator_config = {
-        .gen_gpio_num = SERVO_PULSE_GPIO,
+        .gen_gpio_num = SERVO_PWM_PIN,
     };
     ESP_ERROR_CHECK(mcpwm_new_generator(operator, &generator_config, &generator));
 
@@ -58,11 +58,11 @@ void servo_task(void *par) {
         if ((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
             int on = atoi(str);
             if(on == 1) {
-                ESP_LOGI(TAG, "Servo +90");
-                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(90)));
+                ESP_LOGI(TAG, "Servo angle changed %d", SERVO_ON_ANGLE);
+                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(SERVO_ON_ANGLE)));
             } else {
-                ESP_LOGI(TAG, "Servo -90");
-                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(-90)));
+                ESP_LOGI(TAG, "Servo angle changed %d", SERVO_OFF_ANGLE);
+                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(SERVO_OFF_ANGLE)));
             }
         }
         vTaskDelay(10 / portTICK_PERIOD_MS);
