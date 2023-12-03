@@ -3,8 +3,6 @@
 static uint8_t s_led_state = 0;
 static const char* TAG = "Blink task";
 
-#define BLINK_GPIO 12
-
 static void blink_led(void) {
     /* Set the GPIO level according to the state (LOW or HIGH)*/
     gpio_set_level(BLINK_GPIO, s_led_state);

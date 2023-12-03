@@ -5,4 +5,6 @@
 #include "esp_log.h"
 #include "driver/gpio.h"
 
+#include "board.h"
+
 void blink_task(void *par);
