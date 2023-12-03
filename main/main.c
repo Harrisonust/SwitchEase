@@ -15,6 +15,7 @@
 #include "sdkconfig.h"
 
 // user includes
+#include "main.h"
 #include "blink.h"
 #include "ble_server.h"
 #include "servo.h"
@@ -22,10 +23,13 @@
 TaskHandle_t blinkTaskHandle = NULL;
 TaskHandle_t bleTaskHandle = NULL;
 TaskHandle_t servoTaskHandle = NULL;
+QueueHandle_t servoDataQueue;
 
 void app_main(void) {
     /* Configure the peripheral according to the LED type */
+    servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char)*SERVO_DATA_QUEUE_SIZE);
     ble_setup();
+
     xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
     xTaskCreatePinnedToCore(ble_task, "Bluetooth Task", NIMBLE_HS_STACK_SIZE, NULL, (configMAX_PRIORITIES - 4), &bleTaskHandle, 0);
     xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);

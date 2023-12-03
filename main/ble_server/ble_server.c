@@ -4,11 +4,13 @@ static const char* TAG = "Bluetooth task";
 
 uint8_t ble_addr_type;
 void ble_app_advertise(void);
+extern QueueHandle_t servoDataQueue;
 
 // Write data to ESP32 defined as server
 static int device_write(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt* ctxt, void* arg) {
-    // char* data = (char*)ctxt->om->om_data;
+    char* data = (char*)ctxt->om->om_data;
     ESP_LOGI(TAG, "Data from the client: %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
+    xQueueSendToBack(servoDataQueue, (void*)data, SERVO_DATA_QUEUE_SIZE);
     return 0;
 }
 

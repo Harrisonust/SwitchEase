@@ -1,5 +1,6 @@
 #include "servo.h"
 static const char* TAG = "Servo task";
+extern QueueHandle_t servoDataQueue;
 
 void servo_task(void *par) {
     ESP_LOGI(TAG, "Create timer and operator");
@@ -53,9 +54,17 @@ void servo_task(void *par) {
     ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 
     while (1) {
-        ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(90)));
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-        ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(-90)));
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        char str[SERVO_DATA_QUEUE_SIZE];
+        if ((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
+            int on = atoi(str);
+            if(on == 1) {
+                ESP_LOGI(TAG, "Servo +90");
+                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(90)));
+            } else {
+                ESP_LOGI(TAG, "Servo -90");
+                ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparator, example_angle_to_compare(-90)));
+            }
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
