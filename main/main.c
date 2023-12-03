@@ -25,8 +25,8 @@ TaskHandle_t servoTaskHandle = NULL;
 
 void app_main(void) {
     /* Configure the peripheral according to the LED type */
-
-    xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 0);
-    xTaskCreatePinnedToCore(ble_task, "Bluetooth Task", 2800, NULL, 3, &bleTaskHandle, 1);
+    ble_setup();
+    xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
+    xTaskCreatePinnedToCore(ble_task, "Bluetooth Task", NIMBLE_HS_STACK_SIZE, NULL, (configMAX_PRIORITIES - 4), &bleTaskHandle, 0);
     xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
 }
