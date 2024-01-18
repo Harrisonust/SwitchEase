@@ -18,5 +18,5 @@
 
 #include "main.h"
 
-void ble_setup();
+void ble_init(void);
 void ble_task(void *par);

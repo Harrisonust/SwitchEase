@@ -26,9 +26,9 @@ TaskHandle_t servoTaskHandle = NULL;
 QueueHandle_t servoDataQueue;
 
 void app_main(void) {
-    /* Configure the peripheral according to the LED type */
     servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char)*SERVO_DATA_QUEUE_SIZE);
-    ble_setup();
+    ble_init();
+    servo_init(); 
 
     xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
     xTaskCreatePinnedToCore(ble_task, "Bluetooth Task", NIMBLE_HS_STACK_SIZE, NULL, (configMAX_PRIORITIES - 4), &bleTaskHandle, 0);

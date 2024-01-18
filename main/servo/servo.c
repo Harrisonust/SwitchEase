@@ -2,7 +2,9 @@
 static const char* TAG = "Servo task";
 extern QueueHandle_t servoDataQueue;
 
-void servo_task(void *par) {
+static mcpwm_cmpr_handle_t comparator = NULL;
+
+void servo_init(void) {
     ESP_LOGI(TAG, "Create timer and operator");
     mcpwm_timer_handle_t timer = NULL;
     mcpwm_timer_config_t timer_config = {
@@ -24,7 +26,6 @@ void servo_task(void *par) {
     ESP_ERROR_CHECK(mcpwm_operator_connect_timer(operator, timer));
 
     ESP_LOGI(TAG, "Create comparator and generator from the operator");
-    mcpwm_cmpr_handle_t comparator = NULL;
     mcpwm_comparator_config_t comparator_config = {
         .flags.update_cmp_on_tez = true,
     };
@@ -52,7 +53,9 @@ void servo_task(void *par) {
     ESP_LOGI(TAG, "Enable and start timer");
     ESP_ERROR_CHECK(mcpwm_timer_enable(timer));
     ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
+}
 
+void servo_task(void *par) {
     while (1) {
         char str[SERVO_DATA_QUEUE_SIZE];
         if ((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {

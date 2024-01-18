@@ -24,7 +24,7 @@ static int device_read(uint16_t con_handle, uint16_t attr_handle, struct ble_gat
 // UUID - Universal Unique Identifier
 static const struct ble_gatt_svc_def gatt_svcs[] = {
     {.type = BLE_GATT_SVC_TYPE_PRIMARY,
-     .uuid = BLE_UUID16_DECLARE(0x180),                 // Define UUID for device type
+     .uuid = BLE_UUID16_DECLARE(0x180),                // Define UUID for device type
      .characteristics = (struct ble_gatt_chr_def[]){
         {.uuid = BLE_UUID16_DECLARE(0xFEF4),           // Define UUID for reading
         .flags = BLE_GATT_CHR_F_READ,
@@ -87,15 +87,15 @@ void ble_app_on_sync(void) {
     ble_app_advertise();                     // Define the BLE connection
 }
 
-void ble_setup() {
-    nvs_flash_init();                          // 1 - Initialize NVS flash using
-    nimble_port_init();                        // 3 - Initialize the host stack
-    ble_svc_gap_device_name_set("ESP32"); // 4 - Initialize NimBLE configuration - server name
-    ble_svc_gap_init();                        // 4 - Initialize NimBLE configuration - gap service
-    ble_svc_gatt_init();                       // 4 - Initialize NimBLE configuration - gatt service
-    ble_gatts_count_cfg(gatt_svcs);            // 4 - Initialize NimBLE configuration - config gatt services
-    ble_gatts_add_svcs(gatt_svcs);             // 4 - Initialize NimBLE configuration - queues gatt services.
-    ble_hs_cfg.sync_cb = ble_app_on_sync;      // 5 - Initialize application
+void ble_init(void) {
+    nvs_flash_init();                          // Initialize NVS flash using
+    nimble_port_init();                        // Initialize the host stack
+    ble_svc_gap_device_name_set("AutoSwitch"); // Initialize NimBLE configuration - server name
+    ble_svc_gap_init();                        // Initialize NimBLE configuration - gap service
+    ble_svc_gatt_init();                       // Initialize NimBLE configuration - gatt service
+    ble_gatts_count_cfg(gatt_svcs);            // Initialize NimBLE configuration - config gatt services
+    ble_gatts_add_svcs(gatt_svcs);             // Initialize NimBLE configuration - queues gatt services.
+    ble_hs_cfg.sync_cb = ble_app_on_sync;      // Initialize application
 }
 
 // The infinite task
