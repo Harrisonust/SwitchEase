@@ -36,7 +36,7 @@ void app_main(void) {
 	servo_init();
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
-	xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
+	// xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,

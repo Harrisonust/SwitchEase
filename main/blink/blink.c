@@ -12,8 +12,7 @@ void blink_init(void) {
 
 void blink_task(void* par) {
 	while(1) {
-		// ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" :
-		// "OFF");
+		ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
 		gpio_set_level(BLINK_PIN, s_led_state);
 		s_led_state = !s_led_state;
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
