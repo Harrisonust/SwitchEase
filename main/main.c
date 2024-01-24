@@ -28,6 +28,7 @@ QueueHandle_t servoDataQueue;
 
 void app_main(void) {
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
+	blink_init();
 	ble_init();
 	servo_init();
 

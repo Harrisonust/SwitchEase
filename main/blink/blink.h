@@ -6,4 +6,5 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 
+void blink_init(void);
 void blink_task(void* par);
