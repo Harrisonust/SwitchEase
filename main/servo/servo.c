@@ -60,11 +60,13 @@ void servo_init(void) {
 }
 
 void servo_task(void* par) {
+	bool servo_state = false; // off
 	while(1) {
 		char str[SERVO_DATA_QUEUE_SIZE];
 		if((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
 			int on = atoi(str);
-			if(on == 1) {
+			if(on == 1) { servo_state = !servo_state; }
+			if(servo_state) {
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_ON_ANGLE);
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_ON_ANGLE)));

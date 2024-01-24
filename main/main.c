@@ -18,21 +18,25 @@
 // user includes
 #include "ble_server.h"
 #include "blink.h"
+#include "button.h"
 #include "main.h"
 #include "servo.h"
 
-TaskHandle_t  blinkTaskHandle = NULL;
-TaskHandle_t  bleTaskHandle	  = NULL;
-TaskHandle_t  servoTaskHandle = NULL;
+TaskHandle_t  blinkTaskHandle  = NULL;
+TaskHandle_t  bleTaskHandle	   = NULL;
+TaskHandle_t  servoTaskHandle  = NULL;
+TaskHandle_t  buttonTaskHandle = NULL;
 QueueHandle_t servoDataQueue;
 
 void app_main(void) {
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
 	blink_init();
+	button_init();
 	ble_init();
 	servo_init();
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
+	xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,
