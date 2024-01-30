@@ -33,7 +33,7 @@ void servo_init(void) {
 
 	mcpwm_gen_handle_t		 generator		  = NULL;
 	mcpwm_generator_config_t generator_config = {
-		.gen_gpio_num = SERVO_PWM_PIN,
+		.gen_gpio_num = SERVO_PIN,
 	};
 	ESP_ERROR_CHECK(mcpwm_new_generator(operator, & generator_config, &generator));
 
