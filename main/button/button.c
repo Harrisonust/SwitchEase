@@ -2,7 +2,7 @@
 
 static const char*	 TAG = "Button task";
 extern QueueHandle_t servoDataQueue;
-const int			 debounce_time = 50;
+const int			 debounce_time = 100;
 
 static void IRAM_ATTR button_intr_handler(void* par) {
 	static int last_interrupt_time = 0;
