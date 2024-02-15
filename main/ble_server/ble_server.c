@@ -6,40 +6,53 @@ uint8_t				 ble_addr_type;
 void				 ble_app_advertise(void);
 extern QueueHandle_t servoDataQueue;
 
-// Write data to ESP32 defined as server
-static int device_write(uint16_t					 conn_handle,
-						uint16_t					 attr_handle,
-						struct ble_gatt_access_ctxt* ctxt,
-						void*						 arg) {
+static int servo_write_state(uint16_t					  conn_handle,
+							 uint16_t					  attr_handle,
+							 struct ble_gatt_access_ctxt* ctxt,
+							 void*						  arg) {
 	char* data = (char*)ctxt->om->om_data;
 	ESP_LOGI(TAG, "Data from the client: %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
 	xQueueSendToBack(servoDataQueue, (void*)data, SERVO_DATA_QUEUE_SIZE);
 	return 0;
 }
 
-// Read data from ESP32 defined as server
-static int device_read(uint16_t						con_handle,
-					   uint16_t						attr_handle,
-					   struct ble_gatt_access_ctxt* ctxt,
-					   void*						arg) {
+static int servo_read_state(uint16_t					 con_handle,
+							uint16_t					 attr_handle,
+							struct ble_gatt_access_ctxt* ctxt,
+							void*						 arg) {
 	os_mbuf_append(ctxt->om, "Data from the server", strlen("Data from the server"));
+	return 0;
+}
+
+static int batt_read_voltage_level(uint16_t						con_handle,
+								   uint16_t						attr_handle,
+								   struct ble_gatt_access_ctxt* ctxt,
+								   void*						arg) {
+	float	  battery_percentage = battery_measure();
+	const int STR_SIZE			 = 13;
+	char	  str[STR_SIZE];
+	sprintf(str, "Battery %2.1f", battery_percentage);
+
+	os_mbuf_append(ctxt->om, str, STR_SIZE);
 	return 0;
 }
 
 // Array of pointers to other service definitions
 // UUID - Universal Unique Identifier
-static const struct ble_gatt_svc_def gatt_svcs[] = {
-	{.type = BLE_GATT_SVC_TYPE_PRIMARY,
-	 .uuid = BLE_UUID16_DECLARE(0x180), // Define UUID for device type
-	 .characteristics
-	 = (struct ble_gatt_chr_def[]){{.uuid  = BLE_UUID16_DECLARE(0xFEF4), // Define UUID for reading
-									.flags = BLE_GATT_CHR_F_READ,
-									.access_cb = device_read},
-								   {.uuid  = BLE_UUID16_DECLARE(0xDEAD), // Define UUID for writing
-									.flags = BLE_GATT_CHR_F_WRITE,
-									.access_cb = device_write},
-								   {0}}},
-	{0}};
+static const struct ble_gatt_svc_def gatt_svcs[]
+	= {{.type			 = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid			 = BLE_UUID16_DECLARE(0x180),
+		.characteristics = (struct ble_gatt_chr_def[]){{.uuid	   = BLE_UUID16_DECLARE(0x0001),
+														.flags	   = BLE_GATT_CHR_F_READ,
+														.access_cb = servo_read_state},
+													   {.uuid	   = BLE_UUID16_DECLARE(0x0002),
+														.flags	   = BLE_GATT_CHR_F_WRITE,
+														.access_cb = servo_write_state},
+													   {.uuid	   = BLE_UUID16_DECLARE(0x0003),
+														.flags	   = BLE_GATT_CHR_F_READ,
+														.access_cb = batt_read_voltage_level},
+													   {0}}},
+	   {0}};
 
 // BLE event handling
 static int ble_gap_event(struct ble_gap_event* event, void* arg) {
