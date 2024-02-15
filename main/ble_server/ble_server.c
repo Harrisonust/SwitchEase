@@ -104,13 +104,16 @@ void ble_app_on_sync(void) {
 }
 
 void ble_init(void) {
-	nvs_flash_init();						   // Initialize NVS flash using
-	nimble_port_init();						   // Initialize the host stack
-	ble_svc_gap_device_name_set("AutoSwitch"); // Initialize NimBLE configuration - server name
-	ble_svc_gap_init();						   // Initialize NimBLE configuration - gap service
-	ble_svc_gatt_init();					   // Initialize NimBLE configuration - gatt service
-	ble_gatts_count_cfg(gatt_svcs);		  // Initialize NimBLE configuration - config gatt services
-	ble_gatts_add_svcs(gatt_svcs);		  // Initialize NimBLE configuration - queues gatt services.
+	nvs_flash_init();	// Initialize NVS flash using
+	nimble_port_init(); // Initialize the host stack
+
+	ble_svc_gap_device_name_set("SmartSwitch"); // server name
+	ble_svc_gap_init();							// gap service
+
+	ble_svc_gatt_init();			// gatt service
+	ble_gatts_count_cfg(gatt_svcs); // config gatt services
+	ble_gatts_add_svcs(gatt_svcs);	// queues gatt services
+
 	ble_hs_cfg.sync_cb = ble_app_on_sync; // Initialize application
 }
 
