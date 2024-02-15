@@ -21,6 +21,7 @@
 #include "button.h"
 #include "main.h"
 #include "servo.h"
+#include "esp_pm.h"
 
 TaskHandle_t  blinkTaskHandle  = NULL;
 TaskHandle_t  bleTaskHandle	   = NULL;
@@ -35,8 +36,14 @@ void app_main(void) {
 	ble_init();
 	servo_init();
 
+	// power management
+	esp_pm_config_t pm_config
+		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
+	ESP_ERROR_CHECK(esp_pm_configure(&pm_config));
+
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
 	// xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
+	// disable if using interrupt
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,
