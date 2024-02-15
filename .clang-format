@@ -1,7 +1,7 @@
 ---
 Language: Cpp
 # Options include: LLVM, Google, Chromium, Mozilla, WebKit
-BasedOnStyle:  Google
+BasedOnStyle: Google
 
 # Indentation
 IndentWidth: 4
@@ -25,21 +25,21 @@ BinPackParameters: false
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterEnum: false
-    AfterClass: false
-    AfterStruct: false
-    SplitEmptyFunction: false
-    AfterFunction: false
-    AfterNamespace: false
-    BeforeElse: false
-    BeforeWhile: false
-    BeforeLambdaBody: false
-    AfterControlStatement: false
-    AfterObjCDeclaration: false
-    AfterUnion: false
-    AfterExternBlock: false
-    BeforeCatch: false
-    IndentBraces: false
+  AfterEnum: false
+  AfterClass: false
+  AfterStruct: false
+  SplitEmptyFunction: false
+  AfterFunction: false
+  AfterNamespace: false
+  BeforeElse: false
+  BeforeWhile: false
+  BeforeLambdaBody: false
+  AfterControlStatement: false
+  AfterObjCDeclaration: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  IndentBraces: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializersBeforeComma: false
 AllowAllParametersOfDeclarationOnNextLine: false
@@ -73,4 +73,4 @@ SpacesInSquareBrackets: false
 # Others
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
-SortIncludes: true
+SortIncludes: false
