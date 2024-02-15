@@ -31,9 +31,9 @@ float battery_measure(void) {
 		= (bat_voltage - MIN_BAT_VOLTAGE) / (MAX_BAT_VOLTAGE - MIN_BAT_VOLTAGE) * 100;
 	bat_percentage = (bat_percentage < 0) ? 0 : (bat_percentage > 100 ? 100 : bat_percentage);
 
-	printf("ADC Reading: %d\n", adc_reading);
-	printf("Cal ADC Reading: %d\n", cal_adc_reading);
-	printf("ADC Reading: %f\n", bat_voltage);
-	printf("Battery: %f%%\n", bat_percentage);
-	return adc_reading;
+	// printf("ADC Reading: %d\n", adc_reading);
+	// printf("Cal ADC Reading: %d\n", cal_adc_reading);
+	// printf("ADC Reading: %f\n", bat_voltage);
+	// printf("Battery: %f%%\n", bat_percentage);
+	return bat_percentage;
 }
