@@ -18,5 +18,7 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
+#include "battery_management.h"
+
 void ble_init(void);
 void ble_task(void* par);

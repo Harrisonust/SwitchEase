@@ -21,6 +21,7 @@
 #include "button.h"
 #include "main.h"
 #include "servo.h"
+#include "battery_management.h"
 
 TaskHandle_t  blinkTaskHandle  = NULL;
 TaskHandle_t  bleTaskHandle	   = NULL;
@@ -34,6 +35,7 @@ void app_main(void) {
 	button_init();
 	ble_init();
 	servo_init();
+	battery_adc_init();
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
 	// xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
