@@ -5,10 +5,11 @@
 #include "sdkconfig.h"
 
 #include "board.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 
-#define ADC_WIDTH		ADC_WIDTH_BIT_12
+#define ADC_WIDTH		ADC_BITWIDTH_12
 #define ADC_ATTEN		ADC_ATTEN_DB_11
 #define MAX_BAT_VOLTAGE 4.2
 #define MIN_BAT_VOLTAGE 3.0
