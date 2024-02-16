@@ -59,18 +59,19 @@ void servo_init(void) {
 	ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 }
 
+bool servo_state = false; // off
 void servo_task(void* par) {
-	bool servo_state = false; // off
 	while(1) {
 		char str[SERVO_DATA_QUEUE_SIZE];
 		if((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
-			int on = atoi(str);
-			if(on == 1) { servo_state = !servo_state; }
-			if(servo_state) {
+			int state = atoi(str);
+			if(state == 1) {
+				servo_state = true;
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_ON_ANGLE);
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_ON_ANGLE)));
-			} else {
+			} else if(state == 0) {
+				servo_state = false;
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_OFF_ANGLE);
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_OFF_ANGLE)));

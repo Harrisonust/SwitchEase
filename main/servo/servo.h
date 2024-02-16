@@ -1,4 +1,5 @@
 #pragma once
+#include <string.h>
 #include "board.h"
 #include "driver/mcpwm_prelude.h"
 #include "esp_log.h"
