@@ -2,16 +2,18 @@
 
 static const char* TAG = "Bluetooth task";
 
-uint8_t				 ble_addr_type;
-void				 ble_app_advertise(void);
+uint8_t ble_addr_type;
+void	ble_app_advertise(void);
+
 extern QueueHandle_t servoDataQueue;
+extern bool			 servo_state;
 
 static int servo_write_state(uint16_t					  conn_handle,
 							 uint16_t					  attr_handle,
 							 struct ble_gatt_access_ctxt* ctxt,
 							 void*						  arg) {
 	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Data from the client: %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
+	ESP_LOGI(TAG, "Switch %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
 	xQueueSendToBack(servoDataQueue, (void*)data, SERVO_DATA_QUEUE_SIZE);
 	return 0;
 }
@@ -20,7 +22,10 @@ static int servo_read_state(uint16_t					 con_handle,
 							uint16_t					 attr_handle,
 							struct ble_gatt_access_ctxt* ctxt,
 							void*						 arg) {
-	os_mbuf_append(ctxt->om, "Data from the server", strlen("Data from the server"));
+	const int STR_SIZE = 11;
+	char	  str[STR_SIZE];
+	sprintf(str, "Switch %s", servo_state ? " on" : "off");
+	os_mbuf_append(ctxt->om, str, STR_SIZE);
 	return 0;
 }
 
@@ -29,9 +34,9 @@ static int batt_read_voltage_level(uint16_t						con_handle,
 								   struct ble_gatt_access_ctxt* ctxt,
 								   void*						arg) {
 	float	  battery_percentage = battery_measure();
-	const int STR_SIZE			 = 13;
+	const int STR_SIZE			 = 14;
 	char	  str[STR_SIZE];
-	sprintf(str, "Battery %2.1f", battery_percentage);
+	sprintf(str, "Battery %2.1f%%", battery_percentage);
 
 	os_mbuf_append(ctxt->om, str, STR_SIZE);
 	return 0;
@@ -65,6 +70,7 @@ static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 			break;
 		case BLE_GAP_EVENT_DISCONNECT:
 			ESP_LOGI("GAP", "BLE GAP EVENT DISCONNECTED");
+			ble_app_advertise();
 			break;
 		// Advertise again after completion of the event
 		case BLE_GAP_EVENT_ADV_COMPLETE:
@@ -97,25 +103,28 @@ void ble_app_advertise(void) {
 	ble_gap_adv_start(ble_addr_type, NULL, BLE_HS_FOREVER, &adv_params, ble_gap_event, NULL);
 }
 
-// The application
 void ble_app_on_sync(void) {
 	ble_hs_id_infer_auto(0, &ble_addr_type); // Determines the best address type automatically
 	ble_app_advertise();					 // Define the BLE connection
 }
 
 void ble_init(void) {
-	nvs_flash_init();						   // Initialize NVS flash using
-	nimble_port_init();						   // Initialize the host stack
-	ble_svc_gap_device_name_set("AutoSwitch"); // Initialize NimBLE configuration - server name
-	ble_svc_gap_init();						   // Initialize NimBLE configuration - gap service
-	ble_svc_gatt_init();					   // Initialize NimBLE configuration - gatt service
-	ble_gatts_count_cfg(gatt_svcs);		  // Initialize NimBLE configuration - config gatt services
-	ble_gatts_add_svcs(gatt_svcs);		  // Initialize NimBLE configuration - queues gatt services.
-	ble_hs_cfg.sync_cb = ble_app_on_sync; // Initialize application
+	nvs_flash_init();	// Initialize NVS flash using
+	nimble_port_init(); // Initialize the host stack
+
+	ble_svc_gap_device_name_set("SmartSwitch"); // server name
+	ble_svc_gap_init();							// gap service
+
+	ble_svc_gatt_init();			// gatt service
+	ble_gatts_count_cfg(gatt_svcs); // config gatt services
+	ble_gatts_add_svcs(gatt_svcs);	// queues gatt services
+
+	ble_hs_cfg.sync_cb = ble_app_on_sync;
 }
 
 // The infinite task
 void ble_task(void* param) {
 	nimble_port_run(); // This function will return only when nimble_port_stop()
 					   // is executed
+	nimble_port_freertos_deinit();
 }
