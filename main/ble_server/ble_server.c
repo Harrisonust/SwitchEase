@@ -65,6 +65,7 @@ static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 			break;
 		case BLE_GAP_EVENT_DISCONNECT:
 			ESP_LOGI("GAP", "BLE GAP EVENT DISCONNECTED");
+			ble_app_advertise();
 			break;
 		// Advertise again after completion of the event
 		case BLE_GAP_EVENT_ADV_COMPLETE:
@@ -97,7 +98,6 @@ void ble_app_advertise(void) {
 	ble_gap_adv_start(ble_addr_type, NULL, BLE_HS_FOREVER, &adv_params, ble_gap_event, NULL);
 }
 
-// The application
 void ble_app_on_sync(void) {
 	ble_hs_id_infer_auto(0, &ble_addr_type); // Determines the best address type automatically
 	ble_app_advertise();					 // Define the BLE connection
@@ -114,11 +114,12 @@ void ble_init(void) {
 	ble_gatts_count_cfg(gatt_svcs); // config gatt services
 	ble_gatts_add_svcs(gatt_svcs);	// queues gatt services
 
-	ble_hs_cfg.sync_cb = ble_app_on_sync; // Initialize application
+	ble_hs_cfg.sync_cb = ble_app_on_sync;
 }
 
 // The infinite task
 void ble_task(void* param) {
 	nimble_port_run(); // This function will return only when nimble_port_stop()
 					   // is executed
+	nimble_port_freertos_deinit();
 }
