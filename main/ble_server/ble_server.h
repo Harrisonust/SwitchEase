@@ -18,7 +18,19 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
+#include "board.h"
 #include "battery_management.h"
 
 void ble_init(void);
 void ble_task(void* par);
+
+#define SERV_UUID_VERSION		0xFFF0
+#define CHAR_UUID_FM_VERSION	0xFFF1
+#define CHAR_UUID_HW_VERSION	0xFFF2
+
+#define SERV_UUID_SERVO			0xFFF3
+#define CHAR_UUID_READ_SERVO	0xFFF4
+#define CHAR_UUID_WRITE_SERVO	0xFFF5
+
+#define SERV_UUID_BATTERY		0x180F
+#define CHAR_UUID_BATTERY_LEVEL 0x2A19
