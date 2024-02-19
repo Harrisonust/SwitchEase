@@ -34,3 +34,7 @@ void ble_task(void* par);
 
 #define SERV_UUID_BATTERY		0x180F
 #define CHAR_UUID_BATTERY_LEVEL 0x2A19
+
+#define SERV_UUID_WIFI			0xFFF6
+#define CHAR_UUID_WIFI_NAME		0xFFF7
+#define CHAR_UUID_WIFI_PASSWORD 0xFFF8

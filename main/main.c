@@ -13,6 +13,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+// #include "esp_pm.h"
 #include "sdkconfig.h"
 
 // user includes
@@ -29,9 +30,11 @@ TaskHandle_t  bleTaskHandle	   = NULL;
 TaskHandle_t  servoTaskHandle  = NULL;
 TaskHandle_t  buttonTaskHandle = NULL;
 QueueHandle_t servoDataQueue;
+QueueHandle_t wifiDataQueue;
 
 void app_main(void) {
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
+	wifiDataQueue  = xQueueCreate(WIFI_DATA_QUEUE_LENGTH, sizeof(char) * WIFI_DATA_QUEUE_SIZE);
 	blink_init();
 	button_init();
 	ble_init();
@@ -41,11 +44,11 @@ void app_main(void) {
 	// power management
 	esp_pm_config_t pm_config
 		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
-	// ESP_ERROR_CHECK(esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo shaking
+	// ESP_ERROR_CHECK(esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo
+	// shaking
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
-	// xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
-	// disable if using interrupt
+
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,

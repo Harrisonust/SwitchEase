@@ -6,7 +6,9 @@ uint8_t ble_addr_type;
 void	ble_app_advertise(void);
 
 extern QueueHandle_t servoDataQueue;
-extern bool			 servo_state;
+extern QueueHandle_t wifiDataQueue;
+
+extern bool servo_state;
 
 static int servo_state_write(uint16_t					  conn_handle,
 							 uint16_t					  attr_handle,
@@ -57,6 +59,26 @@ static int hw_version_read(uint16_t						con_handle,
 	return 0;
 }
 
+static int wifi_name_write(uint16_t						conn_handle,
+						   uint16_t						attr_handle,
+						   struct ble_gatt_access_ctxt* ctxt,
+						   void*						arg) {
+	char* data = (char*)ctxt->om->om_data;
+	ESP_LOGI(TAG, "Wifi name: %s", ctxt->om->om_data);
+	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
+	return 0;
+}
+
+static int wifi_password_write(uint16_t						conn_handle,
+							   uint16_t						attr_handle,
+							   struct ble_gatt_access_ctxt* ctxt,
+							   void*						arg) {
+	char* data = (char*)ctxt->om->om_data;
+	ESP_LOGI(TAG, "Wifi password: %s", ctxt->om->om_data);
+	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
+	return 0;
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[]
 	= {{.type = BLE_GATT_SVC_TYPE_PRIMARY,
 		.uuid = BLE_UUID16_DECLARE(SERV_UUID_VERSION),
@@ -85,6 +107,16 @@ static const struct ble_gatt_svc_def gatt_svcs[]
 									   .flags	  = BLE_GATT_CHR_F_READ,
 									   .access_cb = batt_voltage_level_read},
 									  {0}}},
+	//    {.type = BLE_GATT_SVC_TYPE_PRIMARY,
+	// 	.uuid = BLE_UUID16_DECLARE(SERV_UUID_WIFI),
+	// 	.characteristics
+	// 	= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_NAME),
+	// 								   .flags	  = BLE_GATT_CHR_F_WRITE,
+	// 								   .access_cb = wifi_name_write},
+	// 								  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_PASSWORD),
+	// 								   .flags	  = BLE_GATT_CHR_F_WRITE,
+	// 								   .access_cb = wifi_password_write},
+	// 								  {0}}},
 
 	   {0}};
 
