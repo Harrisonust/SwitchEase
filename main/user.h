@@ -1,4 +1,7 @@
 #pragma once
 
-#define SERVO_ON_ANGLE	60
-#define SERVO_OFF_ANGLE -60
+#define SERVO_ON_ANGLE			 60
+#define SERVO_OFF_ANGLE			 -60
+
+#define SLEEP_PERIOD_LOWER_BOUND 22
+#define SLEEP_PERIOD_UPPER_BOUND 2

@@ -1,6 +1,9 @@
 #include "sntp.h"
 
+static const char* TAG = "SNTP Task";
+
 extern TaskHandle_t wifiConnectedSemaphore;
+bool				sync_with_sntp = false;
 
 void wifi_event_handler(void*			 arg,
 						esp_event_base_t event_base,
@@ -53,24 +56,26 @@ void sntp_task_init(void) {
 
 void sntp_task(void* par) {
 	// wait for time to be set
-	time_t	  now		  = 0;
-	struct tm timeinfo	  = {0};
-	int		  retry		  = 0;
-	const int retry_count = 5000;
+	time_t	  now		   = 0;
+	struct tm current_time = {0};
+	int		  retry		   = 0;
+	const int retry_count  = 5000;
 
 	// wait to connect to wifi
 	if(xSemaphoreTake(wifiConnectedSemaphore, portMAX_DELAY)) {
 		// wait to connect to sntp
 		while(sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED && ++retry < retry_count) {
-			ESP_LOGI("TAG", "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+			ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
 			vTaskDelay(1000 / portTICK_PERIOD_MS);
 		}
 
 		setenv("TZ", "CST-8", 1);
 		time(&now);
-		localtime_r(&now, &timeinfo);
-		const char* str = asctime(&timeinfo);
-		ESP_LOGI("SNTP", "%s", str);
+		localtime_r(&now, &current_time);
+		ESP_LOGI(TAG, "%s", asctime(&current_time));
+		sync_with_sntp = true;
+
 		vTaskDelete(NULL); // delete this task
+						   // todo: enable this task maybe once a week
 	}
 }
