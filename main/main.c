@@ -13,7 +13,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-// #include "esp_pm.h"
+#include "esp_pm.h"
 #include "sdkconfig.h"
 
 // user includes
@@ -23,23 +23,28 @@
 #include "main.h"
 #include "servo.h"
 #include "battery_management.h"
-#include "esp_pm.h"
+#include "sntp.h"
 
-TaskHandle_t  blinkTaskHandle  = NULL;
-TaskHandle_t  bleTaskHandle	   = NULL;
-TaskHandle_t  servoTaskHandle  = NULL;
-TaskHandle_t  buttonTaskHandle = NULL;
-QueueHandle_t servoDataQueue;
-QueueHandle_t wifiDataQueue;
+TaskHandle_t	  blinkTaskHandle  = NULL;
+TaskHandle_t	  bleTaskHandle	   = NULL;
+TaskHandle_t	  servoTaskHandle  = NULL;
+TaskHandle_t	  buttonTaskHandle = NULL;
+TaskHandle_t	  SNTPTaskHandle   = NULL;
+QueueHandle_t	  servoDataQueue;
+QueueHandle_t	  wifiDataQueue;
+SemaphoreHandle_t wifiConnectedSemaphore;
 
 void app_main(void) {
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
 	wifiDataQueue  = xQueueCreate(WIFI_DATA_QUEUE_LENGTH, sizeof(char) * WIFI_DATA_QUEUE_SIZE);
+	wifiConnectedSemaphore = xSemaphoreCreateBinary();
+
 	blink_init();
 	button_init();
 	ble_init();
 	servo_init();
 	battery_adc_init();
+	sntp_task_init();
 
 	// power management
 	esp_pm_config_t pm_config
@@ -48,7 +53,7 @@ void app_main(void) {
 	// shaking
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
-
+	xTaskCreatePinnedToCore(sntp_task, "SNTP Task", 3000, NULL, 1, &SNTPTaskHandle, 1);
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,
