@@ -41,7 +41,8 @@ void app_main(void) {
 	// power management
 	esp_pm_config_t pm_config
 		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
-	// ESP_ERROR_CHECK(esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo shaking
+	ESP_ERROR_CHECK(
+		esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo shaking
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 2, &blinkTaskHandle, 1);
 	// xTaskCreatePinnedToCore(button_task, "Button Task", 3000, NULL, 2, &buttonTaskHandle, 1);
