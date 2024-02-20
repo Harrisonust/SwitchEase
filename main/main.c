@@ -32,16 +32,22 @@ TaskHandle_t bleTaskHandle		 = NULL;
 TaskHandle_t servoTaskHandle	 = NULL;
 TaskHandle_t buttonTaskHandle	 = NULL;
 TaskHandle_t sntpTaskHandle		 = NULL;
+TaskHandle_t wifiTaskHandle		 = NULL;
 TaskHandle_t sleepCtrlTaskHandle = NULL;
 
-QueueHandle_t	  servoDataQueue;
-QueueHandle_t	  wifiDataQueue;
+QueueHandle_t servoDataQueue;
+QueueHandle_t wifiDataQueue;
+
+SemaphoreHandle_t startWifiConnectionSemaphore;
 SemaphoreHandle_t wifiConnectedSemaphore;
+SemaphoreHandle_t timeSyncSemaphore;
 
 void app_main(void) {
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
 	wifiDataQueue  = xQueueCreate(WIFI_DATA_QUEUE_LENGTH, sizeof(char) * WIFI_DATA_QUEUE_SIZE);
-	wifiConnectedSemaphore = xSemaphoreCreateBinary();
+	startWifiConnectionSemaphore = xSemaphoreCreateBinary();
+	wifiConnectedSemaphore		 = xSemaphoreCreateBinary();
+	timeSyncSemaphore			 = xSemaphoreCreateBinary();
 
 	blink_init();
 	button_init();
@@ -61,7 +67,6 @@ void app_main(void) {
 	// shaking
 
 	// todo: find out the optimal stack size and priority
-	xTaskCreatePinnedToCore(sntp_task, "SNTP Task", 3000, NULL, 3, &sntpTaskHandle, 1);
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
 							NIMBLE_HS_STACK_SIZE,
@@ -69,14 +74,14 @@ void app_main(void) {
 							(configMAX_PRIORITIES - 4),
 							&bleTaskHandle,
 							0);
-	// vTaskSuspend(blinkTaskHandle);
+	xTaskCreatePinnedToCore(wifi_task, "WiFi Task", 3000, NULL, 3, &sntpTaskHandle, 1);
+	xTaskCreatePinnedToCore(sntp_task, "SNTP Task", 3000, NULL, 3, &sntpTaskHandle, 1);
+	xTaskCreatePinnedToCore(
+		sleep_controller_task, "Sleep Controller Task", 3000, NULL, 3, &sleepCtrlTaskHandle, 1);
 
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 3, &blinkTaskHandle, 1);
 	vTaskSuspend(blinkTaskHandle);
 
 	xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
 	vTaskSuspend(servoTaskHandle);
-
-	xTaskCreatePinnedToCore(
-		sleep_controller_task, "Sleep Controller Task", 3000, NULL, 3, &sleepCtrlTaskHandle, 1);
 }

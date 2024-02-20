@@ -3,7 +3,9 @@
 static const char* TAG = "SNTP Task";
 
 extern TaskHandle_t wifiConnectedSemaphore;
-bool				sync_with_sntp = false;
+extern TaskHandle_t timeSyncSemaphore;
+
+bool sync_with_sntp = false;
 
 void sntp_task_init(void) {
 	// do nothing
@@ -33,9 +35,12 @@ void sntp_task(void* par) {
 		time(&now);
 		localtime_r(&now, &current_time);
 		ESP_LOGI(TAG, "%s", asctime(&current_time));
-		sync_with_sntp = true;
 
-		vTaskDelete(NULL); // delete this task
-						   // todo: enable this task maybe once a week
+		xSemaphoreGive(timeSyncSemaphore); // option1
+		// sync_with_sntp = true; // option2
+		// vTaskResume(sleepControllerTaskHandle); // option3
+
+		vTaskSuspend(NULL); // suspend this task
+							// todo: enable this task maybe once a week
 	}
 }

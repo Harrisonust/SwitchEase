@@ -1,5 +1,6 @@
 #include "wifi.h"
 
+extern SemaphoreHandle_t startWifiConnectionSemaphore;
 extern SemaphoreHandle_t wifiConnectedSemaphore;
 
 static void wifi_event_handler(void*			arg,
@@ -30,14 +31,21 @@ void wifi_init() {
 
 	esp_netif_t* sta_netif = esp_netif_create_default_wifi_sta();
 	assert(sta_netif);
+}
 
-	wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = "Luo",
-            .password = "bbbbbbbb",
-        },
-    };
-	esp_wifi_set_mode(WIFI_MODE_STA);
-	esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-	esp_wifi_start();
+void wifi_task(void* par) {
+	if(xSemaphoreTake(startWifiConnectionSemaphore, portMAX_DELAY)) {
+		wifi_config_t wifi_config = {
+			.sta = {
+				.ssid = "Luo",
+				.password = "bbbbbbbb",
+			},
+		};
+		esp_wifi_set_mode(WIFI_MODE_STA);
+		esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+		esp_wifi_start();
+
+		// should add a while loop so that next connection still try to connect to wifi
+		vTaskSuspend(NULL);
+	}
 }

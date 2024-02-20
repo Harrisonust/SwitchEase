@@ -5,8 +5,9 @@ static const char* TAG = "Bluetooth task";
 uint8_t ble_addr_type;
 void	ble_app_advertise(void);
 
-extern QueueHandle_t servoDataQueue;
-extern QueueHandle_t wifiDataQueue;
+extern QueueHandle_t	 servoDataQueue;
+extern QueueHandle_t	 wifiDataQueue;
+extern SemaphoreHandle_t startWifiConnectionSemaphore;
 
 extern bool servo_state;
 
@@ -59,12 +60,12 @@ static int hw_version_read(uint16_t						con_handle,
 	return 0;
 }
 
-static int wifi_name_write(uint16_t						conn_handle,
+static int wifi_ssid_write(uint16_t						conn_handle,
 						   uint16_t						attr_handle,
 						   struct ble_gatt_access_ctxt* ctxt,
 						   void*						arg) {
 	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Wifi name: %s", ctxt->om->om_data);
+	ESP_LOGI(TAG, "Wifi ssid: %s", ctxt->om->om_data);
 	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
 	return 0;
 }
@@ -76,6 +77,17 @@ static int wifi_password_write(uint16_t						conn_handle,
 	char* data = (char*)ctxt->om->om_data;
 	ESP_LOGI(TAG, "Wifi password: %s", ctxt->om->om_data);
 	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
+	return 0;
+}
+
+static int wifi_connect_write(uint16_t					   conn_handle,
+							  uint16_t					   attr_handle,
+							  struct ble_gatt_access_ctxt* ctxt,
+							  void*						   arg) {
+	char* data = (char*)ctxt->om->om_data;
+	ESP_LOGI(TAG, "Wifi connect request: %s", ctxt->om->om_data);
+
+	xSemaphoreGive(startWifiConnectionSemaphore);
 	return 0;
 }
 
@@ -107,16 +119,19 @@ static const struct ble_gatt_svc_def gatt_svcs[]
 									   .flags	  = BLE_GATT_CHR_F_READ,
 									   .access_cb = batt_voltage_level_read},
 									  {0}}},
-	//    {.type = BLE_GATT_SVC_TYPE_PRIMARY,
-	// 	.uuid = BLE_UUID16_DECLARE(SERV_UUID_WIFI),
-	// 	.characteristics
-	// 	= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_NAME),
-	// 								   .flags	  = BLE_GATT_CHR_F_WRITE,
-	// 								   .access_cb = wifi_name_write},
-	// 								  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_PASSWORD),
-	// 								   .flags	  = BLE_GATT_CHR_F_WRITE,
-	// 								   .access_cb = wifi_password_write},
-	// 								  {0}}},
+	   {.type = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid = BLE_UUID16_DECLARE(SERV_UUID_WIFI),
+		.characteristics
+		= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_SSID),
+									   .flags	  = BLE_GATT_CHR_F_WRITE,
+									   .access_cb = wifi_ssid_write},
+									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_PASSWORD),
+									   .flags	  = BLE_GATT_CHR_F_WRITE,
+									   .access_cb = wifi_password_write},
+									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_CONNECT),
+									   .flags	  = BLE_GATT_CHR_F_WRITE,
+									   .access_cb = wifi_connect_write},
+									  {0}}},
 
 	   {0}};
 
@@ -165,7 +180,7 @@ void ble_app_on_sync(void) {
 }
 
 void ble_init(void) {
-	nvs_flash_init();	// Initialize NVS flash using
+	nvs_flash_init();	// Initialize NVS flash using // todo: check if this conflict with wifi
 	nimble_port_init(); // Initialize the host stack
 
 	ble_svc_gap_device_name_set("SmartSwitch"); // server name
