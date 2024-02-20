@@ -23,6 +23,7 @@
 #include "main.h"
 #include "servo.h"
 #include "battery_management.h"
+#include "wifi.h"
 #include "sntp.h" // todo: rename file name
 #include "sleep_controller.h"
 
@@ -47,6 +48,10 @@ void app_main(void) {
 	ble_init();
 	servo_init();
 	battery_adc_init();
+
+	// for sntp
+	nvs_flash_init();
+	wifi_init();
 	sntp_task_init();
 
 	// power management
