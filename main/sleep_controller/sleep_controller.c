@@ -2,12 +2,11 @@
 
 static const char* TAG = "Sleep Controller Task";
 
-extern TaskHandle_t		 blinkTaskHandle;
-extern TaskHandle_t		 bleTaskHandle;
-extern TaskHandle_t		 servoTaskHandle;
-extern TaskHandle_t		 buttonTaskHandle;
-extern SemaphoreHandle_t timeSyncSemaphore;
-extern bool				 sync_with_sntp;
+extern TaskHandle_t blinkTaskHandle;
+extern TaskHandle_t bleTaskHandle;
+extern TaskHandle_t servoTaskHandle;
+extern TaskHandle_t buttonTaskHandle;
+extern bool			timeSyncFlag;
 
 static bool in_wakeup_period(const struct tm current_time) {
 	if(SLEEP_PERIOD_LOWER_BOUND <= current_time.tm_hour
@@ -21,10 +20,10 @@ void sleep_controller_task(void* par) {
 	struct tm current_time = {0};
 
 	while(1) {
-		if(xSemaphoreTake(timeSyncSemaphore, portMAX_DELAY)) {
+		if(timeSyncFlag) {
 			time(&now);
 			localtime_r(&now, &current_time);
-			// ESP_LOGI(TAG, "%s", asctime(&current_time));
+			ESP_LOGI(TAG, "%s", asctime(&current_time));
 
 			if(in_wakeup_period(current_time)) {
 				ESP_LOGI(TAG, "wakeup period");
