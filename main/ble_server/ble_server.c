@@ -8,7 +8,7 @@ void	ble_app_advertise(void);
 extern QueueHandle_t servoDataQueue;
 extern bool			 servo_state;
 
-static int servo_write_state(uint16_t					  conn_handle,
+static int servo_state_write(uint16_t					  conn_handle,
 							 uint16_t					  attr_handle,
 							 struct ble_gatt_access_ctxt* ctxt,
 							 void*						  arg) {
@@ -18,51 +18,78 @@ static int servo_write_state(uint16_t					  conn_handle,
 	return 0;
 }
 
-static int servo_read_state(uint16_t					 con_handle,
+static int servo_state_read(uint16_t					 con_handle,
 							uint16_t					 attr_handle,
 							struct ble_gatt_access_ctxt* ctxt,
 							void*						 arg) {
-	const int STR_SIZE = 11;
-	char	  str[STR_SIZE];
+	char str[20];
 	sprintf(str, "Switch %s", servo_state ? " on" : "off");
-	os_mbuf_append(ctxt->om, str, STR_SIZE);
+	os_mbuf_append(ctxt->om, str, strlen(str));
 	return 0;
 }
 
-static int batt_read_voltage_level(uint16_t						con_handle,
+static int batt_voltage_level_read(uint16_t						con_handle,
 								   uint16_t						attr_handle,
 								   struct ble_gatt_access_ctxt* ctxt,
 								   void*						arg) {
-	float	  battery_percentage = battery_measure();
-	const int STR_SIZE			 = 14;
-	char	  str[STR_SIZE];
-	sprintf(str, "Battery %2.1f%%", battery_percentage);
-
-	os_mbuf_append(ctxt->om, str, STR_SIZE);
+	int battery_percentage = battery_measure();
+	os_mbuf_append(ctxt->om, (void*)&battery_percentage, sizeof(battery_percentage));
 	return 0;
 }
 
-// Array of pointers to other service definitions
-// UUID - Universal Unique Identifier
+static int fw_version_read(uint16_t						con_handle,
+						   uint16_t						attr_handle,
+						   struct ble_gatt_access_ctxt* ctxt,
+						   void*						arg) {
+	char* str[30];
+	sprintf(str, "FW version %s", FW_VERSION);
+	os_mbuf_append(ctxt->om, str, strlen(str));
+	return 0;
+}
+
+static int hw_version_read(uint16_t						con_handle,
+						   uint16_t						attr_handle,
+						   struct ble_gatt_access_ctxt* ctxt,
+						   void*						arg) {
+	char* str[30];
+	sprintf(str, "HW version %s", HW_VERSION);
+	os_mbuf_append(ctxt->om, str, strlen(str));
+	return 0;
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[]
-	= {{.type			 = BLE_GATT_SVC_TYPE_PRIMARY,
-		.uuid			 = BLE_UUID16_DECLARE(0x0180),
-		.characteristics = (struct ble_gatt_chr_def[]){{.uuid	   = BLE_UUID16_DECLARE(0x0001),
-														.flags	   = BLE_GATT_CHR_F_READ,
-														.access_cb = servo_read_state},
-													   {.uuid	   = BLE_UUID16_DECLARE(0x0002),
-														.flags	   = BLE_GATT_CHR_F_WRITE,
-														.access_cb = servo_write_state},
-													   {.uuid	   = BLE_UUID16_DECLARE(0x0003),
-														.flags	   = BLE_GATT_CHR_F_READ,
-														.access_cb = batt_read_voltage_level},
-													   {0}}},
+	= {{.type = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid = BLE_UUID16_DECLARE(SERV_UUID_VERSION),
+		.characteristics
+		= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_FM_VERSION),
+									   .flags	  = BLE_GATT_CHR_F_READ,
+									   .access_cb = fw_version_read},
+									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_HW_VERSION),
+									   .flags	  = BLE_GATT_CHR_F_READ,
+									   .access_cb = hw_version_read},
+									  {0}}},
+	   {.type = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid = BLE_UUID16_DECLARE(SERV_UUID_SERVO),
+		.characteristics
+		= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_READ_SERVO),
+									   .flags	  = BLE_GATT_CHR_F_READ,
+									   .access_cb = servo_state_read},
+									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WRITE_SERVO),
+									   .flags	  = BLE_GATT_CHR_F_WRITE,
+									   .access_cb = servo_state_write},
+									  {0}}},
+	   {.type = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid = BLE_UUID16_DECLARE(SERV_UUID_BATTERY),
+		.characteristics
+		= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_BATTERY_LEVEL),
+									   .flags	  = BLE_GATT_CHR_F_READ,
+									   .access_cb = batt_voltage_level_read},
+									  {0}}},
+
 	   {0}};
 
-// BLE event handling
 static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 	switch(event->type) {
-		// Advertise if connected
 		case BLE_GAP_EVENT_CONNECT:
 			ESP_LOGI(
 				"GAP", "BLE GAP EVENT CONNECT %s", event->connect.status == 0 ? "OK!" : "FAILED!");
@@ -72,7 +99,6 @@ static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 			ESP_LOGI("GAP", "BLE GAP EVENT DISCONNECTED");
 			ble_app_advertise();
 			break;
-		// Advertise again after completion of the event
 		case BLE_GAP_EVENT_ADV_COMPLETE:
 			ESP_LOGI("GAP", "BLE GAP EVENT");
 			ble_app_advertise();
@@ -83,13 +109,11 @@ static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 	return 0;
 }
 
-// Define the BLE connection
 void ble_app_advertise(void) {
 	// GAP - device name definition
 	struct ble_hs_adv_fields fields;
-	const char*				 device_name;
 	memset(&fields, 0, sizeof(fields));
-	device_name				= ble_svc_gap_device_name(); // Read the BLE device name
+	const char* device_name = ble_svc_gap_device_name(); // Read the BLE device name
 	fields.name				= (uint8_t*)device_name;
 	fields.name_len			= strlen(device_name);
 	fields.name_is_complete = 1;
