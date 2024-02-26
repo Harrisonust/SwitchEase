@@ -2,11 +2,11 @@
 static const char*	 TAG = "Servo task";
 extern QueueHandle_t servoDataQueue;
 
-static mcpwm_cmpr_handle_t comparator = NULL;
+static mcpwm_timer_handle_t timer	   = NULL;
+static mcpwm_cmpr_handle_t	comparator = NULL;
 
 void servo_init(void) {
 	ESP_LOGI(TAG, "Create timer and operator");
-	mcpwm_timer_handle_t timer		  = NULL;
 	mcpwm_timer_config_t timer_config = {
 		.group_id	   = 0,
 		.clk_src	   = MCPWM_TIMER_CLK_SRC_DEFAULT,
@@ -56,7 +56,8 @@ void servo_init(void) {
 
 	ESP_LOGI(TAG, "Enable and start timer");
 	ESP_ERROR_CHECK(mcpwm_timer_enable(timer));
-	ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
+	// start timer only when receiving ble command
+	// ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 }
 
 bool servo_state = false; // off
@@ -64,6 +65,7 @@ void servo_task(void* par) {
 	while(1) {
 		char str[SERVO_DATA_QUEUE_SIZE];
 		if((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
+			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 			int state = atoi(str);
 			if(state == 1) {
 				servo_state = true;
@@ -76,6 +78,8 @@ void servo_task(void* par) {
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_OFF_ANGLE)));
 			}
+			vTaskDelay(1000 / portTICK_PERIOD_MS); // wait for the servo to reach the target angle
+			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_STOP_EMPTY));
 		}
 		vTaskDelay(10 / portTICK_PERIOD_MS);
 	}
