@@ -36,7 +36,7 @@ TaskHandle_t sleepCtrlTaskHandle = NULL;
 
 QueueHandle_t servoDataQueue;
 
-bool timeSyncFlag = false;
+RTC_DATA_ATTR bool timeSyncFlag = false;
 
 void app_main(void) {
 	ESP_LOGI(TAG, "app");

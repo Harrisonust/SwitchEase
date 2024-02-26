@@ -9,4 +9,6 @@
 
 #include "user.h"
 
+typedef enum { SLEEP_MODE = 0, ACTIVE_MODE = 1 } Op_Mode;
+
 void sleep_controller_task(void* par);
