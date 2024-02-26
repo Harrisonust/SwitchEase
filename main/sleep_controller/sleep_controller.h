@@ -6,6 +6,7 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 #include "esp_sleep.h"
+#include "esp_pm.h"
 
 #include "user.h"
 

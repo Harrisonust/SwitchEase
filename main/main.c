@@ -13,7 +13,6 @@
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-#include "esp_pm.h"
 #include "sdkconfig.h"
 
 // user includes
@@ -48,12 +47,6 @@ void app_main(void) {
 	ble_init();
 	servo_init();
 	battery_adc_init();
-
-	// power management
-	// esp_pm_config_t pm_config
-	// 	= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
-	// ESP_ERROR_CHECK(esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo
-	// shaking
 
 	// todo: find out the optimal stack size and priority
 	xTaskCreatePinnedToCore(ble_task,

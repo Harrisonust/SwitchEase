@@ -69,6 +69,10 @@ void sleep_controller_task(void* par) {
 				ESP_LOGI(TAG, "active period");
 				vTaskResume(blinkTaskHandle);
 				vTaskResume(servoTaskHandle);
+				// power management
+				esp_pm_config_t pm_config
+					= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
+				ESP_ERROR_CHECK(esp_pm_configure(&pm_config));
 
 				vTaskDelay(remaining_secs * 1000 / portTICK_PERIOD_MS);
 			} else {
