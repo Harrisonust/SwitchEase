@@ -6,7 +6,9 @@ uint8_t ble_addr_type;
 void	ble_app_advertise(void);
 
 extern QueueHandle_t servoDataQueue;
-extern bool			 servo_state;
+extern bool			 timeSyncFlag;
+
+extern bool servo_state;
 
 static int servo_state_write(uint16_t					  conn_handle,
 							 uint16_t					  attr_handle,
@@ -57,6 +59,43 @@ static int hw_version_read(uint16_t						con_handle,
 	return 0;
 }
 
+static int cts_write(uint16_t					  conn_handle,
+					 uint16_t					  attr_handle,
+					 struct ble_gatt_access_ctxt* ctxt,
+					 void*						  arg) {
+	char* data = (char*)ctxt->om->om_data;
+	ESP_LOGI(TAG, "current time: %s", ctxt->om->om_data);
+
+	// set time
+	int year, month, day, hour, minute, second;
+	sscanf(data, "%d/%d/%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second);
+
+	struct tm current_time_tm = {
+		.tm_year  = year - 1900,
+		.tm_mon	  = month - 1,
+		.tm_mday  = day,
+		.tm_hour  = hour,
+		.tm_min	  = minute,
+		.tm_sec	  = second,
+		.tm_isdst = -1 // Not dealing with daylight saving time
+	};
+	time_t		   current_time_t = mktime(&current_time_tm);
+	struct timeval tv			  = {.tv_sec = current_time_t};
+
+	settimeofday(&tv, NULL);
+
+	// get time
+	time_t	  now = 0;
+	struct tm current_time_tm_r;
+	time(&now);
+	localtime_r(&now, &current_time_tm_r);
+	char* str = asctime(&current_time_tm_r);
+	ESP_LOGI(TAG, "%s", asctime(&current_time_tm_r));
+
+	timeSyncFlag = true;
+	return 0;
+}
+
 static const struct ble_gatt_svc_def gatt_svcs[]
 	= {{.type = BLE_GATT_SVC_TYPE_PRIMARY,
 		.uuid = BLE_UUID16_DECLARE(SERV_UUID_VERSION),
@@ -85,7 +124,12 @@ static const struct ble_gatt_svc_def gatt_svcs[]
 									   .flags	  = BLE_GATT_CHR_F_READ,
 									   .access_cb = batt_voltage_level_read},
 									  {0}}},
-
+	   {.type			 = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid			 = BLE_UUID16_DECLARE(SERV_UUID_CTS),
+		.characteristics = (struct ble_gatt_chr_def[]){{.uuid  = BLE_UUID16_DECLARE(CHAR_UUID_CTS),
+														.flags = BLE_GATT_CHR_F_WRITE,
+														.access_cb = cts_write},
+													   {0}}},
 	   {0}};
 
 static int ble_gap_event(struct ble_gap_event* event, void* arg) {
@@ -133,7 +177,7 @@ void ble_app_on_sync(void) {
 }
 
 void ble_init(void) {
-	nvs_flash_init();	// Initialize NVS flash using
+	nvs_flash_init();	// Initialize NVS flash using // todo: check if this conflict with wifi
 	nimble_port_init(); // Initialize the host stack
 
 	ble_svc_gap_device_name_set("SmartSwitch"); // server name
