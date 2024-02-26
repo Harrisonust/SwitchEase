@@ -13,7 +13,6 @@
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-#include "esp_pm.h"
 #include "sdkconfig.h"
 
 // user includes
@@ -27,44 +26,27 @@
 #include "sntp.h" // todo: rename file name
 #include "sleep_controller.h"
 
+const char* TAG = "app_main";
+
 TaskHandle_t blinkTaskHandle	 = NULL;
 TaskHandle_t bleTaskHandle		 = NULL;
 TaskHandle_t servoTaskHandle	 = NULL;
-TaskHandle_t buttonTaskHandle	 = NULL;
-TaskHandle_t sntpTaskHandle		 = NULL;
-TaskHandle_t wifiTaskHandle		 = NULL;
 TaskHandle_t sleepCtrlTaskHandle = NULL;
 
 QueueHandle_t servoDataQueue;
-QueueHandle_t wifiDataQueue;
 
-SemaphoreHandle_t startWifiConnectionSemaphore;
-SemaphoreHandle_t wifiConnectedSemaphore;
-SemaphoreHandle_t timeSyncSemaphore;
+RTC_DATA_ATTR bool timeSyncFlag = false;
 
 void app_main(void) {
+	ESP_LOGI(TAG, "app");
+
 	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
-	wifiDataQueue  = xQueueCreate(WIFI_DATA_QUEUE_LENGTH, sizeof(char) * WIFI_DATA_QUEUE_SIZE);
-	startWifiConnectionSemaphore = xSemaphoreCreateBinary();
-	wifiConnectedSemaphore		 = xSemaphoreCreateBinary();
-	timeSyncSemaphore			 = xSemaphoreCreateBinary();
 
 	blink_init();
 	button_init();
 	ble_init();
 	servo_init();
 	battery_adc_init();
-
-	// for sntp
-	nvs_flash_init();
-	wifi_init();
-	sntp_task_init();
-
-	// power management
-	// esp_pm_config_t pm_config
-	// 	= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
-	// ESP_ERROR_CHECK(esp_pm_configure(&pm_config)); // enabling light sleep mode causes the servo
-	// shaking
 
 	// todo: find out the optimal stack size and priority
 	xTaskCreatePinnedToCore(ble_task,
@@ -74,11 +56,11 @@ void app_main(void) {
 							(configMAX_PRIORITIES - 4),
 							&bleTaskHandle,
 							0);
-	xTaskCreatePinnedToCore(wifi_task, "WiFi Task", 3000, NULL, 3, &sntpTaskHandle, 1);
-	xTaskCreatePinnedToCore(sntp_task, "SNTP Task", 3000, NULL, 3, &sntpTaskHandle, 1);
+
 	xTaskCreatePinnedToCore(
 		sleep_controller_task, "Sleep Controller Task", 3000, NULL, 3, &sleepCtrlTaskHandle, 1);
 
+	// peripheral thread
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 3, &blinkTaskHandle, 1);
 	vTaskSuspend(blinkTaskHandle);
 

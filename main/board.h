@@ -1,6 +1,6 @@
 #pragma once
 
-#define FW_VERSION	"1.0.0"
+#define FW_VERSION	"1.0.1"
 #define HW_VERSION	"1.0.1"
 
 #define SERVO_PIN	3 // GPIO connects to the PWM signal line

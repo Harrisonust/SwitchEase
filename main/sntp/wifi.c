@@ -1,8 +1,5 @@
 #include "wifi.h"
 
-extern SemaphoreHandle_t startWifiConnectionSemaphore;
-extern SemaphoreHandle_t wifiConnectedSemaphore;
-
 static void wifi_event_handler(void*			arg,
 							   esp_event_base_t event_base,
 							   int32_t			event_id,
@@ -13,7 +10,7 @@ static void wifi_event_handler(void*			arg,
 		ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
 		ESP_LOGI("WIFI", "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		xSemaphoreGiveFromISR(wifiConnectedSemaphore, &xHigherPriorityTaskWoken);
+		// xSemaphoreGiveFromISR(wifiConnectedSemaphore, &xHigherPriorityTaskWoken);
 	}
 }
 
@@ -34,18 +31,18 @@ void wifi_init() {
 }
 
 void wifi_task(void* par) {
-	if(xSemaphoreTake(startWifiConnectionSemaphore, portMAX_DELAY)) {
-		wifi_config_t wifi_config = {
-			.sta = {
-				.ssid = "Luo",
-				.password = "bbbbbbbb",
-			},
-		};
-		esp_wifi_set_mode(WIFI_MODE_STA);
-		esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-		esp_wifi_start();
+	// if(xSemaphoreTake(startWifiConnectionSemaphore, portMAX_DELAY)) {
+	// 	wifi_config_t wifi_config = {
+	// 		.sta = {
+	// 			.ssid = "Luo",
+	// 			.password = "bbbbbbbb",
+	// 		},
+	// 	};
+	// 	esp_wifi_set_mode(WIFI_MODE_STA);
+	// 	esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+	// 	esp_wifi_start();
 
-		// should add a while loop so that next connection still try to connect to wifi
-		vTaskSuspend(NULL);
-	}
+	// 	// should add a while loop so that next connection still try to connect to wifi
+	// 	vTaskSuspend(NULL);
+	// }
 }

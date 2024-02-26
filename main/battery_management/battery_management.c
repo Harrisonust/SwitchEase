@@ -71,7 +71,7 @@ void battery_adc_init(void) {
 
 	// config
 	adc_oneshot_chan_cfg_t config = {
-		.bitwidth = ADC_WIDTH,
+		.bitwidth = ADC_BITWIDTH_DEFAULT,
 		.atten	  = ADC_ATTEN,
 	};
 	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, BAT_MEAS_CH, &config));
@@ -88,7 +88,7 @@ float battery_measure(void) {
 	ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &voltage_mv));
 
 	float voltage_v = voltage_mv * 2 / 1000.0;
-	// printf("ADC Reading: %f\n", voltage_v);
+	ESP_LOGI(TAG, "Battery voltage level %.2fV", voltage_v);
 	float bat_percentage
 		= (voltage_v - MIN_BAT_VOLTAGE) / (MAX_BAT_VOLTAGE - MIN_BAT_VOLTAGE) * 100;
 	bat_percentage = (bat_percentage < 0)

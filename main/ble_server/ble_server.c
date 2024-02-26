@@ -5,9 +5,8 @@ static const char* TAG = "Bluetooth task";
 uint8_t ble_addr_type;
 void	ble_app_advertise(void);
 
-extern QueueHandle_t	 servoDataQueue;
-extern QueueHandle_t	 wifiDataQueue;
-extern SemaphoreHandle_t startWifiConnectionSemaphore;
+extern QueueHandle_t servoDataQueue;
+extern bool			 timeSyncFlag;
 
 extern bool servo_state;
 
@@ -60,34 +59,40 @@ static int hw_version_read(uint16_t						con_handle,
 	return 0;
 }
 
-static int wifi_ssid_write(uint16_t						conn_handle,
-						   uint16_t						attr_handle,
-						   struct ble_gatt_access_ctxt* ctxt,
-						   void*						arg) {
+static int cts_write(uint16_t					  conn_handle,
+					 uint16_t					  attr_handle,
+					 struct ble_gatt_access_ctxt* ctxt,
+					 void*						  arg) {
 	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Wifi ssid: %s", ctxt->om->om_data);
-	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
-	return 0;
-}
+	ESP_LOGI(TAG, "current time: %s", ctxt->om->om_data);
 
-static int wifi_password_write(uint16_t						conn_handle,
-							   uint16_t						attr_handle,
-							   struct ble_gatt_access_ctxt* ctxt,
-							   void*						arg) {
-	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Wifi password: %s", ctxt->om->om_data);
-	xQueueSendToBack(wifiDataQueue, (void*)data, WIFI_DATA_QUEUE_SIZE);
-	return 0;
-}
+	// set time
+	int year, month, day, hour, minute, second;
+	sscanf(data, "%d/%d/%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second);
 
-static int wifi_connect_write(uint16_t					   conn_handle,
-							  uint16_t					   attr_handle,
-							  struct ble_gatt_access_ctxt* ctxt,
-							  void*						   arg) {
-	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Wifi connect request: %s", ctxt->om->om_data);
+	struct tm current_time_tm = {
+		.tm_year  = year - 1900,
+		.tm_mon	  = month - 1,
+		.tm_mday  = day,
+		.tm_hour  = hour,
+		.tm_min	  = minute,
+		.tm_sec	  = second,
+		.tm_isdst = -1 // Not dealing with daylight saving time
+	};
+	time_t		   current_time_t = mktime(&current_time_tm);
+	struct timeval tv			  = {.tv_sec = current_time_t};
 
-	xSemaphoreGive(startWifiConnectionSemaphore);
+	settimeofday(&tv, NULL);
+
+	// get time
+	time_t	  now = 0;
+	struct tm current_time_tm_r;
+	time(&now);
+	localtime_r(&now, &current_time_tm_r);
+	char* str = asctime(&current_time_tm_r);
+	ESP_LOGI(TAG, "%s", asctime(&current_time_tm_r));
+
+	timeSyncFlag = true;
 	return 0;
 }
 
@@ -119,20 +124,12 @@ static const struct ble_gatt_svc_def gatt_svcs[]
 									   .flags	  = BLE_GATT_CHR_F_READ,
 									   .access_cb = batt_voltage_level_read},
 									  {0}}},
-	   {.type = BLE_GATT_SVC_TYPE_PRIMARY,
-		.uuid = BLE_UUID16_DECLARE(SERV_UUID_WIFI),
-		.characteristics
-		= (struct ble_gatt_chr_def[]){{.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_SSID),
-									   .flags	  = BLE_GATT_CHR_F_WRITE,
-									   .access_cb = wifi_ssid_write},
-									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_PASSWORD),
-									   .flags	  = BLE_GATT_CHR_F_WRITE,
-									   .access_cb = wifi_password_write},
-									  {.uuid	  = BLE_UUID16_DECLARE(CHAR_UUID_WIFI_CONNECT),
-									   .flags	  = BLE_GATT_CHR_F_WRITE,
-									   .access_cb = wifi_connect_write},
-									  {0}}},
-
+	   {.type			 = BLE_GATT_SVC_TYPE_PRIMARY,
+		.uuid			 = BLE_UUID16_DECLARE(SERV_UUID_CTS),
+		.characteristics = (struct ble_gatt_chr_def[]){{.uuid  = BLE_UUID16_DECLARE(CHAR_UUID_CTS),
+														.flags = BLE_GATT_CHR_F_WRITE,
+														.access_cb = cts_write},
+													   {0}}},
 	   {0}};
 
 static int ble_gap_event(struct ble_gap_event* event, void* arg) {

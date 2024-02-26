@@ -1,6 +1,8 @@
 #pragma once
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "esp_event.h"
 #include "esp_log.h"
@@ -40,3 +42,6 @@ void ble_task(void* par);
 #define CHAR_UUID_WIFI_SSID		0xFF17
 #define CHAR_UUID_WIFI_PASSWORD 0xFF18
 #define CHAR_UUID_WIFI_CONNECT	0xFF19
+
+#define SERV_UUID_CTS			0x1805
+#define CHAR_UUID_CTS			0x2A2B
