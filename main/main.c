@@ -37,10 +37,23 @@ QueueHandle_t servoDataQueue;
 
 RTC_DATA_ATTR bool timeSyncFlag = false;
 
+// void debug_task(void* par) {
+// 	bool state = false;
+// 	rtc_gpio_init(SERVO_EN_RTC_GPIO);
+// 	rtc_gpio_set_direction(SERVO_EN_RTC_GPIO, RTC_GPIO_MODE_OUTPUT_ONLY);
+
+// 	while(1) {
+// 		rtc_gpio_set_level(SERVO_EN_RTC_GPIO, state);
+// 		state = !state;
+// 		ESP_LOGI(TAG, "state %d", state);
+// 		vTaskDelay(1000 / portTICK_PERIOD_MS);
+// 	}
+// }
+
 void app_main(void) {
 	ESP_LOGI(TAG, "app");
 
-	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(char) * SERVO_DATA_QUEUE_SIZE);
+	servoDataQueue = xQueueCreate(SERVO_DATA_QUEUE_LENGTH, sizeof(int));
 
 	blink_init();
 	button_init();
@@ -66,4 +79,6 @@ void app_main(void) {
 
 	xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
 	vTaskSuspend(servoTaskHandle);
+
+	// xTaskCreatePinnedToCore(debug_task, "Debug Task", 2800, NULL, 5, NULL, 1);
 }

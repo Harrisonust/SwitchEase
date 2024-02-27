@@ -14,9 +14,10 @@ static int servo_state_write(uint16_t					  conn_handle,
 							 uint16_t					  attr_handle,
 							 struct ble_gatt_access_ctxt* ctxt,
 							 void*						  arg) {
-	char* data = (char*)ctxt->om->om_data;
-	ESP_LOGI(TAG, "Switch %.*s\n", ctxt->om->om_len, ctxt->om->om_data);
-	xQueueSendToBack(servoDataQueue, (void*)data, SERVO_DATA_QUEUE_SIZE);
+	ESP_LOGI(TAG, "Switch %d\n", ctxt->om->om_data[0] - 48);
+	int			  data	  = ctxt->om->om_data[0] - 48;
+	const uint8_t timeout = 100;
+	xQueueSendToBack(servoDataQueue, (void*)&data, timeout);
 	return 0;
 }
 

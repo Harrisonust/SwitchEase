@@ -1,12 +1,13 @@
 #pragma once
 #include <string.h>
-#include "board.h"
 #include "driver/mcpwm_prelude.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+
 #include "main.h"
+#include "board.h"
 #include "user.h"
 
 // Please consult the datasheet of your servo before changing the following
