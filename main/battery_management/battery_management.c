@@ -74,15 +74,15 @@ void battery_adc_init(void) {
 		.bitwidth = ADC_BITWIDTH_DEFAULT,
 		.atten	  = ADC_ATTEN,
 	};
-	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, BAT_MEAS_CH, &config));
+	ESP_ERROR_CHECK(adc_oneshot_config_channel(adc1_handle, BAT_MEAS_ADC_CH, &config));
 
 	// calibration
-	example_adc_calibration_init(ADC_UNIT_1, BAT_MEAS_CH, ADC_ATTEN, &adc1_cali_chan0_handle);
+	example_adc_calibration_init(ADC_UNIT_1, BAT_MEAS_ADC_CH, ADC_ATTEN, &adc1_cali_chan0_handle);
 }
 
 float battery_measure(void) {
 	int adc_raw;
-	ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, BAT_MEAS_CH, &adc_raw));
+	ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, BAT_MEAS_ADC_CH, &adc_raw));
 
 	int voltage_mv;
 	ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &voltage_mv));
