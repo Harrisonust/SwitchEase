@@ -63,10 +63,10 @@ void servo_init(void) {
 bool servo_state = false; // off
 void servo_task(void* par) {
 	while(1) {
-		char str[SERVO_DATA_QUEUE_SIZE];
-		if((xQueueReceive(servoDataQueue, str, portMAX_DELAY) == pdTRUE)) {
+		int state;
+		if((xQueueReceive(servoDataQueue, &state, portMAX_DELAY) == pdTRUE)) {
 			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
-			int state = atoi(str);
+			ESP_LOGI(TAG, "state %d", state);
 			if(state == 1) {
 				servo_state = true;
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_ON_ANGLE);

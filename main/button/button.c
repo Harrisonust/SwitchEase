@@ -10,8 +10,8 @@ static void IRAM_ATTR button_intr_handler(void* par) {
 	int		   time_now			   = xTaskGetTickCountFromISR();
 
 	if(time_now - last_interrupt_time > debounce_time) {
-		if(servo_state) xQueueSendToBackFromISR(servoDataQueue, (void*)"0", NULL);
-		else xQueueSendToBackFromISR(servoDataQueue, (void*)"1", NULL);
+		int data = servo_state ? 0 : 1;
+		xQueueSendToBackFromISR(servoDataQueue, (void*)&data, NULL);
 		last_interrupt_time = time_now;
 	}
 }
