@@ -1,7 +1,9 @@
+# SwitchEase: Low Power IoT Switch Box for Smart Homes
+
 | Supported Targets | ESP32-S3 |
 | ----------------- | -------- |
 
-This project builds a smart switch that can be controlled by a smartphone via BLE
+An extra-low-power IoT switch box to turn switches on and off by smartphones via BLE
 
 ## How to Use Example
 
@@ -11,6 +13,8 @@ Before project configuration and build, be sure to set the correct chip target u
 
 * An ESP32-S3
 * An USB type C cable for power supply and programming
+* A SG90 servo motor
+* A Lipo battery
 
 ### Build and Flash
 
@@ -22,9 +26,9 @@ See the [Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/l
 
 ## Development History
 ### Firmware
-v1.0.2 Bybrid sleeping pattern to save power consumption, add servo enable
-v1.0.1 Finish the basic functions: ble, servo, battery management, button, led
+* v1.0.2 Hybrid sleeping pattern to save power consumption
+* v1.0.1 Finish the basic functions: ble, servo, battery management, button, led
 
 ### Hardware
-v1.0.1 Remove CP2102/4, add auto-reset circuit, add servo enable
-v1.0.0 Fail
+* v1.0.1 Remove CP2102/4, add auto-reset circuit
+* v1.0.0 Experiment
