@@ -48,6 +48,7 @@ void servo_init(void) {
 		MCPWM_GEN_TIMER_EVENT_ACTION(
 			MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
 		MCPWM_GEN_TIMER_EVENT_ACTION_END()));
+
 	// go low on compare threshold
 	ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(
 		generator,
@@ -56,15 +57,23 @@ void servo_init(void) {
 
 	ESP_LOGI(TAG, "Enable and start timer");
 	ESP_ERROR_CHECK(mcpwm_timer_enable(timer));
+
 	// start timer only when receiving ble command
 	// ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 }
 
 bool servo_state = false; // off
 void servo_task(void* par) {
+	esp_pm_config_t pm_config
+		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
+
 	while(1) {
 		int state;
 		if((xQueueReceive(servoDataQueue, &state, portMAX_DELAY) == pdTRUE)) {
+			// adjust freq to 80 MHz for stable servo control
+			pm_config.min_freq_mhz = 80;
+			esp_pm_configure(&pm_config);
+
 			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 			ESP_LOGI(TAG, "state %d", state);
 			if(state == 1) {
@@ -80,6 +89,10 @@ void servo_task(void* par) {
 			}
 			vTaskDelay(1000 / portTICK_PERIOD_MS); // wait for the servo to reach the target angle
 			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_STOP_EMPTY));
+
+			// adjust freq back to 10 MHz
+			pm_config.min_freq_mhz = 10;
+			esp_pm_configure(&pm_config);
 		}
 		vTaskDelay(10 / portTICK_PERIOD_MS);
 	}
