@@ -23,9 +23,15 @@ int calculateTimeDifference(int currentHour,
 	return transitionTimeInSeconds - currentTimeInSeconds;
 }
 
-void determinePeriodAndTimeToSwitch(const struct tm current_time,
-									Op_Mode*		mode,
-									int*			remainingSecs) {
+/**
+ * Calculates the current mode and the remaining time until the next mode switch
+ *
+ * @param current_time The current time of the system
+ * @param mode A return parameter that indicates the current operational mode
+ * @param remainingSecs A return paramter that specifie the remaining time in seconds to until the
+ * next mode switch
+ */
+void calculateModeSwitchTiming(const struct tm current_time, Op_Mode* mode, int* remainingSecs) {
 	// Extract hour, minute, and second
 	int hour = current_time.tm_hour;
 	int min	 = current_time.tm_min;
@@ -33,9 +39,9 @@ void determinePeriodAndTimeToSwitch(const struct tm current_time,
 
 	// Calculate time to next wake and sleep periods in seconds
 	int timeToWake = calculateTimeDifference(
-		hour, min, sec, TIME_TO_WAKEUP_HR, TIME_TO_WAKEUP_MIN, TIME_TO_WAKEUP_SEC);
+		hour, min, sec, ACTIVE_PERIOD_START_HR, ACTIVE_PERIOD_START_MIN, ACTIVE_PERIOD_START_SEC);
 	int timeToSleep = calculateTimeDifference(
-		hour, min, sec, TIME_TO_SLEEP_HR, TIME_TO_SLEEP_MIN, TIME_TO_SLEEP_SEC);
+		hour, min, sec, ACTIVE_PERIOD_END_HR, ACTIVE_PERIOD_END_MIN, ACTIVE_PERIOD_END_SEC);
 
 	if(timeToWake < timeToSleep) {
 		*mode		   = SLEEP_MODE;
@@ -58,7 +64,7 @@ void sleep_controller_task(void* par) {
 
 			Op_Mode curr_mode;
 			int		remaining_secs;
-			determinePeriodAndTimeToSwitch(current_time, &curr_mode, &remaining_secs);
+			calculateModeSwitchTiming(current_time, &curr_mode, &remaining_secs);
 			remaining_secs += 1;
 			ESP_LOGI(TAG, "Current mode: %s", curr_mode == SLEEP_MODE ? "sleep" : "active");
 			ESP_LOGI(TAG,
@@ -67,8 +73,7 @@ void sleep_controller_task(void* par) {
 					 remaining_secs);
 			if(curr_mode == ACTIVE_MODE) {
 				ESP_LOGI(TAG, "active period");
-				vTaskResume(blinkTaskHandle);
-				vTaskResume(servoTaskHandle);
+
 				// power management
 				esp_pm_config_t pm_config
 					= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
@@ -77,10 +82,8 @@ void sleep_controller_task(void* par) {
 				vTaskDelay(remaining_secs * 1000 / portTICK_PERIOD_MS);
 			} else {
 				ESP_LOGI(TAG, "sleep period");
-				vTaskSuspend(blinkTaskHandle);
-				vTaskSuspend(servoTaskHandle);
 
-				esp_sleep_enable_timer_wakeup(remaining_secs * 1000000);
+				esp_sleep_enable_timer_wakeup(remaining_secs * 1000000ULL);
 				esp_deep_sleep_start();
 			}
 		}

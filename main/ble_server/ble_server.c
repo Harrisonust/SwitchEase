@@ -181,8 +181,8 @@ void ble_init(void) {
 	nvs_flash_init();	// Initialize NVS flash using // todo: check if this conflict with wifi
 	nimble_port_init(); // Initialize the host stack
 
-	ble_svc_gap_device_name_set("SmartSwitch"); // server name
-	ble_svc_gap_init();							// gap service
+	ble_svc_gap_device_name_set("SwitchEase"); // server name
+	ble_svc_gap_init();						   // gap service
 
 	ble_svc_gatt_init();			// gatt service
 	ble_gatts_count_cfg(gatt_svcs); // config gatt services

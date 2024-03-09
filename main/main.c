@@ -75,10 +75,8 @@ void app_main(void) {
 
 	// peripheral thread
 	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 3, &blinkTaskHandle, 1);
-	vTaskSuspend(blinkTaskHandle);
 
 	xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
-	vTaskSuspend(servoTaskHandle);
 
 	// xTaskCreatePinnedToCore(debug_task, "Debug Task", 2800, NULL, 5, NULL, 1);
 }
