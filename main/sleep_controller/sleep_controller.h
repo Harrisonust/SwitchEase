@@ -11,5 +11,10 @@
 #include "user.h"
 
 typedef enum { SLEEP_MODE = 0, ACTIVE_MODE = 1 } Op_Mode;
+typedef struct {
+	int hr;
+	int min;
+	int sec;
+} Daytime;
 
 void sleep_controller_task(void* par);

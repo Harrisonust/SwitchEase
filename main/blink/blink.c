@@ -12,9 +12,9 @@ void blink_init(void) {
 
 void blink_task(void* par) {
 	while(1) {
-		ESP_LOGI(TAG, "alive!");
-		// gpio_set_level(LED_GPIO, s_led_state);
-		// s_led_state = !s_led_state;
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		// ESP_LOGI(TAG, "alive!");
+		gpio_set_level(LED_GPIO, s_led_state);
+		s_led_state = !s_led_state;
+		vTaskDelay(3000 / portTICK_PERIOD_MS);
 	}
 }
