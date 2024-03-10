@@ -6,7 +6,8 @@ Added
 - Implemented a hybrid sleeping pattern to optimize power consumption: the device enters modem sleep mode between a user-defined period. It reduces frequency and goes into light sleep whenever possible; And it switches to deep sleep mode during other times to maximize battery life
 
 Fixed
-- Adjusted power management minimum frequency to 80 before servo operation to prevent shaking, then reset to 10 after completion (Issue #123).
+- Adjusted power management minimum frequency to 80 before servo operation to prevent shaking, then reset to 10 after completion
+- Fix button bouncing effect by making debounce time longer
 
 ### [v1.0.1] - 2024-02-21
 Added
