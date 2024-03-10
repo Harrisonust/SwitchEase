@@ -16,15 +16,15 @@
 #include "sdkconfig.h"
 
 // user includes
+#include "main.h"
 #include "ble_server.h"
 #include "blink.h"
 #include "button.h"
-#include "main.h"
 #include "servo.h"
 #include "battery_management.h"
-#include "wifi.h"
-#include "sntp.h" // todo: rename file name
 #include "sleep_controller.h"
+// #include "wifi.h"
+// #include "sntp.h" // todo: rename file name
 
 const char* TAG = "app_main";
 
@@ -61,24 +61,38 @@ void app_main(void) {
 	servo_init();
 	battery_adc_init();
 
-	// todo: find out the optimal stack size and priority
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
-							NIMBLE_HS_STACK_SIZE,
+							BLE_SERVER_STACK_SIZE,
 							NULL,
-							(configMAX_PRIORITIES - 4),
+							BLE_SERVER_TASK_PRIORITY,
 							&bleTaskHandle,
-							0);
+							COMM_CORE);
 
-	xTaskCreatePinnedToCore(
-		sleep_controller_task, "Sleep Controller Task", 3000, NULL, 3, &sleepCtrlTaskHandle, 1);
+	xTaskCreatePinnedToCore(sleep_controller_task,
+							"Sleep Controller Task",
+							SLEEP_CTRL_STACK_SIZE,
+							NULL,
+							SLEEP_CTRL_TASK_PRIORITY,
+							&sleepCtrlTaskHandle,
+							APP_CORE);
 
-	// peripheral thread
-	xTaskCreatePinnedToCore(blink_task, "Blink Task", 3000, NULL, 3, &blinkTaskHandle, 1);
-	vTaskSuspend(blinkTaskHandle);
+	// peripheral threads
+	xTaskCreatePinnedToCore(blink_task,
+							"Blink Task",
+							SERVO_STACK_SIZE,
+							NULL,
+							SERVO_TASK_PRIORITY,
+							&blinkTaskHandle,
+							APP_CORE);
 
-	xTaskCreatePinnedToCore(servo_task, "Servo Task", 2800, NULL, 3, &servoTaskHandle, 1);
-	vTaskSuspend(servoTaskHandle);
+	xTaskCreatePinnedToCore(servo_task,
+							"Servo Task",
+							BLINK_STACK_SIZE,
+							NULL,
+							BLINK_TASK_PRIORITY,
+							&servoTaskHandle,
+							APP_CORE);
 
 	// xTaskCreatePinnedToCore(debug_task, "Debug Task", 2800, NULL, 5, NULL, 1);
 }
