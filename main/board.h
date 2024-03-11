@@ -1,7 +1,7 @@
 #pragma once
 
-#define FW_VERSION		"1.0.2"
-#define HW_VERSION		"1.0.1"
+#define FW_VERSION		"1.2.0"
+#define HW_VERSION		"1.1.0"
 
 #define SERVO_PWM		3 // SERVO PWM
 #define LED_GPIO		12
