@@ -23,6 +23,7 @@
 
 #include "board.h"
 #include "battery_management.h"
+#include "blink.h"
 
 void ble_init(void);
 void ble_task(void* par);

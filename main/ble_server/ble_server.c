@@ -18,6 +18,7 @@ static int servo_state_write(uint16_t					  conn_handle,
 	int			  data	  = ctxt->om->om_data[0] - 48;
 	const uint8_t timeout = 100;
 	xQueueSendToBack(servoDataQueue, (void*)&data, timeout);
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -28,6 +29,7 @@ static int servo_state_read(uint16_t					 con_handle,
 	char str[20];
 	sprintf(str, "Switch %s", servo_state ? " on" : "off");
 	os_mbuf_append(ctxt->om, str, strlen(str));
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -37,6 +39,7 @@ static int batt_voltage_level_read(uint16_t						con_handle,
 								   void*						arg) {
 	int battery_percentage = battery_measure();
 	os_mbuf_append(ctxt->om, (void*)&battery_percentage, sizeof(battery_percentage));
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -47,6 +50,7 @@ static int fw_version_read(uint16_t						con_handle,
 	char* str[30];
 	sprintf(str, "FW version %s", FW_VERSION);
 	os_mbuf_append(ctxt->om, str, strlen(str));
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -57,6 +61,7 @@ static int hw_version_read(uint16_t						con_handle,
 	char* str[30];
 	sprintf(str, "HW version %s", HW_VERSION);
 	os_mbuf_append(ctxt->om, str, strlen(str));
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -94,6 +99,7 @@ static int cts_write(uint16_t					  conn_handle,
 	ESP_LOGI(TAG, "%s", asctime(&current_time_tm_r));
 
 	timeSyncFlag = true;
+	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
 }
 
@@ -138,10 +144,12 @@ static int ble_gap_event(struct ble_gap_event* event, void* arg) {
 		case BLE_GAP_EVENT_CONNECT:
 			ESP_LOGI(
 				"GAP", "BLE GAP EVENT CONNECT %s", event->connect.status == 0 ? "OK!" : "FAILED!");
+			indicator_mode_set(INDICATOR_BLE_CONNECTED);
 			if(event->connect.status != 0) ble_app_advertise();
 			break;
 		case BLE_GAP_EVENT_DISCONNECT:
 			ESP_LOGI("GAP", "BLE GAP EVENT DISCONNECTED");
+			indicator_mode_set(INDICATOR_BLE_DISCONNECTED);
 			ble_app_advertise();
 			break;
 		case BLE_GAP_EVENT_ADV_COMPLETE:
