@@ -23,6 +23,7 @@
 #include "servo.h"
 #include "battery_management.h"
 #include "sleep_controller.h"
+#include "esp_pm.h"
 // #include "wifi.h"
 // #include "sntp.h" // todo: rename file name
 
@@ -60,6 +61,10 @@ void app_main(void) {
 	ble_init();
 	servo_init();
 	battery_adc_init();
+
+	esp_pm_config_t pm_config
+		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
+	ESP_ERROR_CHECK(esp_pm_configure(&pm_config));
 
 	xTaskCreatePinnedToCore(ble_task,
 							"Bluetooth Task",
