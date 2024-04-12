@@ -81,13 +81,18 @@ void battery_adc_init(void) {
 }
 
 float battery_measure(void) {
-	int adc_raw;
-	ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, BAT_MEAS_ADC_CH, &adc_raw));
+	const int sample_round	 = 10;
+	float	  voltage_sum_mv = 0;
+	for(int i = 0; i < sample_round; i++) {
+		int adc_raw;
+		ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, BAT_MEAS_ADC_CH, &adc_raw));
 
-	int voltage_mv;
-	ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &voltage_mv));
+		int voltage_mv;
+		ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_chan0_handle, adc_raw, &voltage_mv));
+		voltage_sum_mv += voltage_mv;
+	}
 
-	float voltage_v = voltage_mv * 2 / 1000.0;
+	float voltage_v = voltage_sum_mv / sample_round * 2 / 1000.0;
 	ESP_LOGI(TAG, "Battery voltage level %.2fV", voltage_v);
 	float bat_percentage
 		= (voltage_v - MIN_BAT_VOLTAGE) / (MAX_BAT_VOLTAGE - MIN_BAT_VOLTAGE) * 100;
