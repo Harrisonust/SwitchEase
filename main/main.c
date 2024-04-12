@@ -62,6 +62,13 @@ void app_main(void) {
 	servo_init();
 	battery_adc_init();
 
+	// if battery level too low, go to deep sleep mode directly
+	if(battery_measure() < 15.0) {
+		ESP_LOGI(TAG, "low battery warning");
+		indicator_low_battery_level();
+		esp_deep_sleep_start();
+	}
+
 	esp_pm_config_t pm_config
 		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
 	ESP_ERROR_CHECK(esp_pm_configure(&pm_config));

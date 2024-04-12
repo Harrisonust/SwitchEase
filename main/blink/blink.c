@@ -5,13 +5,29 @@ static const char* TAG = "Blink task";
 static Indicator_Mode mode = INDICATOR_ALIVE;
 extern TaskHandle_t	  blinkTaskHandle;
 
+static void indicator_short_blink(void) {
+	gpio_set_level(LED_GPIO, 1);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+	gpio_set_level(LED_GPIO, 0);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+}
+
+static void indicator_long_blink(void) {
+	gpio_set_level(LED_GPIO, 1);
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	gpio_set_level(LED_GPIO, 0);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+}
+
 static void indicator_basic(void) {
-	for(int i = 0; i < 2; i++) {
-		gpio_set_level(LED_GPIO, 1);
-		vTaskDelay(30 / portTICK_PERIOD_MS);
-		gpio_set_level(LED_GPIO, 0);
-		vTaskDelay(100 / portTICK_PERIOD_MS);
-	}
+	indicator_short_blink();
+	indicator_short_blink();
+}
+
+void indicator_low_battery_level(void) {
+	indicator_long_blink();
+	indicator_short_blink();
+	indicator_short_blink();
 }
 
 static void indicator_ble_connected(void) {

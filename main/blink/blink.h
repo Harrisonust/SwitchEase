@@ -16,6 +16,8 @@ typedef enum {
 	INDICATOR_NUM_MODE
 } Indicator_Mode;
 
+void indicator_low_battery_level(void);
+
 void indicator_mode_set(Indicator_Mode m);
 void blink_init(void);
 void blink_task(void* par);
