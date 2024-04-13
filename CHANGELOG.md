@@ -4,6 +4,7 @@
 ### [v1.2.1] - 2024-03-09
 - Fixed battery reading
 - Improved battery reading accuracy
+- Added bootup battery level check
 
 ### [v1.2.0] - 2024-03-09
 Added
