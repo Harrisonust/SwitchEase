@@ -62,7 +62,8 @@ void servo_init(void) {
 	// ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
 }
 
-bool servo_state = false; // off
+RTC_DATA_ATTR bool servo_state = false; // off
+
 void servo_task(void* par) {
 	esp_pm_config_t pm_config
 		= {.max_freq_mhz = 80, .min_freq_mhz = 10, .light_sleep_enable = true};
@@ -81,11 +82,17 @@ void servo_task(void* par) {
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_ON_ANGLE);
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_ON_ANGLE)));
+				vTaskDelay(500);
+				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
+					comparator, example_angle_to_compare(0)));
 			} else if(state == 0) {
 				servo_state = false;
 				ESP_LOGI(TAG, "Servo angle changed %d", SERVO_OFF_ANGLE);
 				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
 					comparator, example_angle_to_compare(SERVO_OFF_ANGLE)));
+				vTaskDelay(500);
+				ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(
+					comparator, example_angle_to_compare(0)));
 			}
 			vTaskDelay(1000 / portTICK_PERIOD_MS); // wait for the servo to reach the target angle
 			ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_STOP_EMPTY));

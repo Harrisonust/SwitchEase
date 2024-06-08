@@ -48,7 +48,7 @@ static int fw_version_read(uint16_t						con_handle,
 						   struct ble_gatt_access_ctxt* ctxt,
 						   void*						arg) {
 	char* str[30];
-	sprintf(str, "FW version %s", FW_VERSION);
+	sprintf(str, "%s", FW_VERSION);
 	os_mbuf_append(ctxt->om, str, strlen(str));
 	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;
@@ -59,7 +59,7 @@ static int hw_version_read(uint16_t						con_handle,
 						   struct ble_gatt_access_ctxt* ctxt,
 						   void*						arg) {
 	char* str[30];
-	sprintf(str, "HW version %s", HW_VERSION);
+	sprintf(str, "%s", HW_VERSION);
 	os_mbuf_append(ctxt->om, str, strlen(str));
 	indicator_mode_set(INDICATOR_BLE_CMD_RECEIVED);
 	return 0;

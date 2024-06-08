@@ -1,6 +1,6 @@
 #pragma once
 
-#define FW_VERSION		"1.2.1"
+#define FW_VERSION		"1.2.2"
 #define HW_VERSION		"1.1.1"
 
 #define SERVO_PWM		3 // SERVO PWM

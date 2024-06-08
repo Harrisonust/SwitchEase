@@ -7,7 +7,7 @@ extern bool timeSyncFlag;
 #define ACTIVE_PERIOD_NUM 2
 Daytime active_periods[ACTIVE_PERIOD_NUM][2] = {
 	{{.hr = 0, .min = 0, .sec = 0}, {.hr = 1, .min = 30, .sec = 0}},
-	{{.hr = 23, .min = 30, .sec = 0}, {.hr = 24, .min = 0, .sec = 0}},
+	{{.hr = 23, .min = 30, .sec = 0}, {.hr = 23, .min = 59, .sec = 59}},
 };
 
 static inline int daytime_to_sec(Daytime t) {
@@ -118,6 +118,7 @@ void sleep_controller_task(void* par) {
 			} else {
 				ESP_LOGI(TAG, "Sleep period");
 
+				esp_sleep_enable_ext0_wakeup(BUTTON_GPIO, 1);
 				esp_sleep_enable_timer_wakeup(transition_time * 1000000ULL);
 				esp_deep_sleep_start();
 			}

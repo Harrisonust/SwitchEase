@@ -38,6 +38,8 @@ QueueHandle_t servoDataQueue;
 
 RTC_DATA_ATTR bool timeSyncFlag = false;
 
+extern bool servo_state;
+
 // void debug_task(void* par) {
 // 	bool state = false;
 // 	rtc_gpio_init(SERVO_EN_RTC_GPIO);
@@ -63,10 +65,17 @@ void app_main(void) {
 	battery_adc_init();
 
 	// if battery level too low, go to deep sleep mode directly
-	if(battery_measure() < 15.0) {
+	if(battery_measure() < 5.0) {
 		ESP_LOGI(TAG, "low battery warning");
 		indicator_low_battery_level();
 		esp_deep_sleep_start();
+	}
+
+	// if wakeup from gpio trigger
+	if(esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
+		ESP_LOGI(TAG, "wake up from GPIO trigger");
+		int data = servo_state ? 0 : 1;
+		xQueueSendToBackFromISR(servoDataQueue, (void*)&data, NULL);
 	}
 
 	esp_pm_config_t pm_config
